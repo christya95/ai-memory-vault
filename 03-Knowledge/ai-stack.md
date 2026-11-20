@@ -20,7 +20,7 @@ Updated 2026-11-20. No secret is written here or in any config file.
 - `op://Personal/Obsidian Local REST API/credential`: the REST plugin key.
 
 ## Who connects how
-- Cursor (Mac): `~/.cursor/mcp.json` (server `obsidian`), `~/.cursor/rules/token-saver.mdc` (a link to `AI-RULES.md`), and a project rule in `.cursor/rules/`. Reads notes by path; MCP is for search.
+- Cursor (Mac): `~/.cursor/mcp.json` (server `obsidian`), `~/.cursor/rules/token-saver.mdc` (a copy of `AI-RULES.md`, refreshed by vault-sync), and a project rule in `.cursor/rules/`. Reads notes by path; MCP is for search.
 - ChatGPT app, Codex (Mac): `~/.codex/AGENTS.md`, section "AI memory vault". Reads and edits notes by path.
 - ChatGPT web: `chatgpt-mcp-setup.md` and `chatgpt-custom-instructions.md`.
 - Ollama chat with vault tools: Continue extension in Cursor, `~/.continue/config.yaml`. Not yet tried in its panel.
@@ -41,5 +41,5 @@ iPhone
 
 Mac
 - Cursor, Settings, Models: enable a fast low-cost model next to the main one.
-- Cursor does not load `~/.cursor/rules/token-saver.mdc` by itself in a new chat (checked 2026-11-20). A session-start hook adds it: `~/.cursor/hooks.json` runs `~/.cursor/hooks/token-rules.sh`. Confirmed in a new chat 2026-11-20; not set up on Windows. Still open: replace the User Rules in Cursor Settings with the short version (the UI, MongoDB view and Hytale rule sets now live in personal skills `anti-ai-slop-ui`, `mongodb-schema-mapper`, `hytale-double-jump`), and remove unused plugins and MCP servers; all of these load on every request.
+- Cursor does not load `~/.cursor/rules/token-saver.mdc` by itself in a new chat (checked 2026-11-20). A session-start hook adds the rules: `~/.cursor/hooks.json` runs `~/.cursor/hooks/token-rules.sh`, which reads `03-Knowledge/AI-RULES.md` and falls back to the copy. Confirmed in a new chat 2026-11-20; not set up on Windows. Still open: User Rules in Cursor Settings, and unused plugins and MCP servers. They load on every request. The UI, MongoDB view and Hytale sets already live in personal skills `anti-ai-slop-ui`, `mongodb-schema-mapper`, `hytale-double-jump`.
 - No NAS share is mounted on this Mac, so archives are not mirrored there. Mount one and ask again.

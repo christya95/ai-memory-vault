@@ -4,7 +4,7 @@ alwaysApply: true
 ---
 # AI rules
 
-Vault: `~/Obsidian/AI-Memory`. One copy of the rules: `~/.cursor/rules/token-saver.mdc` is a copy of this file, refreshed by the vault sync and added to each Cursor session by a hook.
+Vault: `~/Obsidian/AI-Memory`. The session hook reads this file. `~/.cursor/rules/token-saver.mdc` is a copy, refreshed by the vault sync, and the hook uses it when this file is missing.
 
 ## Start
 1. Read `01-Active-State/_state.md`, then the one project note it names. Project unclear: `00-Index/_index.md`. New device or new chat: `00-Index/_cross-device-handoff.md` alone.
