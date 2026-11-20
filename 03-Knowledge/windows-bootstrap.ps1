@@ -2,6 +2,9 @@
 # Run in PowerShell (not as administrator):
 #   powershell -ExecutionPolicy Bypass -File windows-bootstrap.ps1 [-Projects C:\path\to\repo, C:\other\repo]
 # Safe to run again: every step checks before it changes anything.
+# Sync on this PC is Git only: a normal clone of christya95/ai-memory-vault outside iCloud Drive.
+# The Mac keeps the vault in iCloud for the iPhone, with its Git data stored outside the vault; the copy
+# iCloud for Windows would bring here carries a .git pointer to a Mac-only path, so Git cannot use it.
 param([string[]]$Projects = @())
 
 $ErrorActionPreference = 'Stop'
@@ -28,10 +31,19 @@ Refresh-Path
 Step 'Vault: clone and schedule the sync'
 gh auth status *> $null
 if ($LASTEXITCODE -ne 0) { gh auth login --web --git-protocol https }
-if (-not (Test-Path (Join-Path $Vault '.git'))) {
+if ($Vault -match 'iCloud') { throw "The vault path $Vault is inside iCloud Drive. Use a folder outside it." }
+$gitPath = Join-Path $Vault '.git'
+if (Test-Path $gitPath -PathType Leaf) { throw "$Vault is a copy from iCloud (its .git is a pointer file from the Mac). Move that folder away and run this script again." }
+if (-not (Test-Path $gitPath -PathType Container)) {
+    if ((Test-Path $Vault) -and (Get-ChildItem -Force $Vault | Select-Object -First 1)) { throw "$Vault exists and is not a Git clone. Move it away and run this script again." }
     New-Item -ItemType Directory -Force -Path (Split-Path $Vault) | Out-Null
     gh repo clone $Repo $Vault
+    if ($LASTEXITCODE -ne 0) { throw "Could not clone $Repo. Check the GitHub sign-in and run this script again." }
 }
+$origin = git -C $Vault remote get-url origin
+if ($origin -notlike "*$Repo*") { throw "$Vault is a clone of $origin, not of $Repo." }
+$icloudCopy = Join-Path $HOME 'iCloudDrive\iCloud~md~obsidian\AI-Memory'
+if (Test-Path $icloudCopy) { $Todo += "iCloud for Windows also shows the vault at $icloudCopy. Do not open or edit that copy on this PC; use $Vault." }
 $bash = Join-Path $env:ProgramFiles 'Git\bin\bash.exe'
 $action = New-ScheduledTaskAction -Execute $bash -Argument '-lc "~/Obsidian/AI-Memory/_tools/vault-sync"'
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
@@ -75,7 +87,7 @@ if (Test-Path $tailscale) {
     if ($LASTEXITCODE -ne 0) { $Todo += 'Open Tailscale and sign in with the same account as the Mac.' }
 } else { $Todo += 'Tailscale did not install; install it from tailscale.com and sign in.' }
 
-$Todo += "Open Obsidian > Open folder as vault > $Vault"
+$Todo += "Open Obsidian > Open folder as vault > $Vault. Obsidian settings are per device (Git ignores .obsidian)."
 $Todo += 'Open a new terminal so OLLAMA_URL and the new PATH are picked up. Test: echo test error | summarize-to-obsidian -p Test -t check --dry-run'
 $Todo += 'The Mac must be awake for summaries; they go to its Ollama over Tailscale. To use this PC''s GPU instead, change host in 1Password (AI-Stack, Ollama-Tailscale) and run this script again.'
 Write-Host "`nLeft to do by hand:"
