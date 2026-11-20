@@ -41,5 +41,5 @@ iPhone
 
 Mac
 - Cursor, Settings, Models: enable a fast low-cost model next to the main one.
-- Cursor loads `~/.cursor/rules/token-saver.mdc` in every project (seen loaded 2026-11-20). Still open: replace the User Rules in Cursor Settings with the short version (the UI, MongoDB view and Hytale rule sets now live in personal skills `anti-ai-slop-ui`, `mongodb-schema-mapper`, `hytale-double-jump`), and remove unused plugins and MCP servers; all of these load on every request.
+- Cursor does not load `~/.cursor/rules/token-saver.mdc` by itself in a new chat (checked 2026-11-20). A session-start hook adds it: `~/.cursor/hooks.json` runs `~/.cursor/hooks/token-rules.sh`. Confirmed in a new chat 2026-11-20; not set up on Windows. Still open: replace the User Rules in Cursor Settings with the short version (the UI, MongoDB view and Hytale rule sets now live in personal skills `anti-ai-slop-ui`, `mongodb-schema-mapper`, `hytale-double-jump`), and remove unused plugins and MCP servers; all of these load on every request.
 - No NAS share is mounted on this Mac, so archives are not mirrored there. Mount one and ask again.
