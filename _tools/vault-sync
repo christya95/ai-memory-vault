@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Sync this vault with its private Git remote. Runs every few minutes on each computer.
+# Same line changed on two devices: this device's version wins; the other is kept in Git history.
+set -u
+cd "$(dirname "$0")/.." || exit 1
+[ -d .git ] || { echo "not a git repository"; exit 1; }
+git add -A
+git diff --cached --quiet || git commit -q -m "sync $(hostname -s 2>/dev/null || hostname) $(date +%Y-%m-%dT%H:%M)"
+if ! out="$(git pull -q --rebase -X theirs 2>&1)"; then
+  git rebase --abort 2>/dev/null
+  echo "$(date +%Y-%m-%dT%H:%M) pull failed: $(echo "$out" | tail -n 2)"
+  exit 1
+fi
+[ -z "$(git log --oneline '@{u}..' 2>/dev/null)" ] || git push -q 2>&1 | tail -n 3

@@ -1,0 +1,7 @@
+# Per-device Obsidian state and plugin data (the REST plugin keeps a key there)
+.obsidian/workspace*.json
+.obsidian/plugins/
+.obsidian/community-plugins.json
+.trash/
+.DS_Store
+__pycache__/

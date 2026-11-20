@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Start, stop or inspect the vault MCP bridge and its cloudflared tunnel (macOS).
+#   vault-bridge start | stop | status | url
+# The token comes from 1Password at start and is never written to disk.
+set -u
+VAULT="$(cd "$(dirname "$(readlink "$0" || echo "$0")")/.." && pwd)"
+STATE="$HOME/.local/state/ai-memory"
+PORT="${VAULT_BRIDGE_PORT:-8765}"
+TOKEN_REF="op://AI-Stack/Obsidian-MCP-Tunnel/token"
+export PATH="/opt/homebrew/bin:$PATH"
+mkdir -p "$STATE"
+
+alive() { [ -f "$STATE/$1.pid" ] && kill -0 "$(cat "$STATE/$1.pid")" 2>/dev/null; }
+
+stop() {
+  for name in tunnel bridge; do
+    if alive "$name"; then pkill -P "$(cat "$STATE/$name.pid")" 2>/dev/null; kill "$(cat "$STATE/$name.pid")" 2>/dev/null; fi
+    rm -f "$STATE/$name.pid"
+  done
+  lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null  # the server itself, two processes below the launcher
+  rm -f "$STATE/tunnel-url"
+  echo "stopped"
+}
+
+url() {
+  [ -f "$STATE/tunnel-url" ] || { echo "not running"; return 1; }
+  echo "$(cat "$STATE/tunnel-url")/<token>/mcp"
+  echo "token: op read $TOKEN_REF"
+}
+
+start() {
+  alive bridge && alive tunnel && { url; return; }
+  stop >/dev/null
+  VAULT_BRIDGE_TOKEN="$TOKEN_REF" VAULT_BRIDGE_PORT="$PORT" nohup op run --no-masking -- \
+    uv run --quiet --no-project --with "mcp==2.3.0" python "$VAULT/_tools/vault-mcp-bridge.py" >"$STATE/bridge.log" 2>&1 &
+  echo $! >"$STATE/bridge.pid"
+  for _ in $(seq 1 40); do curl -s -o /dev/null -m 1 "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
+  alive bridge || { echo "the bridge did not start: $(tail -n 3 "$STATE/bridge.log")"; return 1; }
+  nohup cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" >"$STATE/tunnel.log" 2>&1 &
+  echo $! >"$STATE/tunnel.pid"
+  for _ in $(seq 1 60); do
+    found="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$STATE/tunnel.log" | head -n 1)"
+    [ -n "$found" ] && { echo "$found" >"$STATE/tunnel-url"; break; }
+    sleep 0.5
+  done
+  [ -f "$STATE/tunnel-url" ] || { echo "the tunnel did not start: $(tail -n 3 "$STATE/tunnel.log")"; stop >/dev/null; return 1; }
+  url
+}
+
+case "${1:-status}" in
+  start) start ;;
+  stop) stop ;;
+  url) url ;;
+  status) alive bridge && echo "bridge: running" || echo "bridge: stopped"; alive tunnel && echo "tunnel: running" || echo "tunnel: stopped" ;;
+  *) echo "usage: vault-bridge start|stop|status|url"; exit 2 ;;
+esac

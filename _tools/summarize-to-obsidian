@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""Compress a log, diff or note with a local Ollama model and save the summary in the vault.
+
+  <command> 2>&1 | summarize-to-obsidian -p Project -t topic            # 02-Logs-And-Summaries/
+  git diff | summarize-to-obsidian -p Project -t topic -k diff
+  ... | summarize-to-obsidian -p Project -k note --state                # "Last summary" in 01-Active-State/Project.md
+"""
+import argparse
+import datetime
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+VAULT = Path(os.environ.get("AI_MEMORY_VAULT") or Path(__file__).resolve().parent.parent)
+OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+MODEL = os.environ.get("SUMMARY_MODEL", "token-saver")
+MAX_CHARS = 12000
+TAIL_LINES = 40
+HEAD_LINES = 3
+ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+SIGNAL = re.compile(r"error|fail|exception|traceback|fatal|panic|denied|refused|timed? ?out|assert|warning", re.I)
+FAILURE = re.compile(r"error|fail|exception|traceback|fatal|panic|denied|refused|timed? ?out|assert|not found|exit (?:code|status) [1-9]", re.I)
+SECRET = re.compile(r"((?:api[_-]?key|token|password|passwd|secret|authorization|cookie)\"?\s*[=:]\s*)(\S+)", re.I)
+
+PROMPTS = {
+    "log": (
+        "Summarize this command output. Reply with exactly these six lines, each as `field: value` on one line, no blank lines:\n"
+        "command: (the command that was run, copied from the first lines)\n"
+        "error: (the failing test or error message, copied exactly)\n"
+        "cause: (one sentence)\n"
+        "file: (each path:line the input gives for the fault, copied exactly; unknown if it gives none)\n"
+        "fix: (one sentence)\n"
+        "status: (open if anything failed, passed if nothing failed)"
+    ),
+    "diff": "Summarize this diff. Fill exactly these fields:\nfiles: (paths changed)\nchange: (what changed, at most 3 short lines)\nrisk: (what could break, or none)",
+    "note": "Compress this text into at most 6 short bullet lines. Keep paths, names, numbers and decisions.",
+}
+
+
+def die(message):
+    sys.exit(f"summarize-to-obsidian: {message}")
+
+
+def clean(text):
+    lines = []
+    for line in ANSI.sub("", text).splitlines():
+        line = SECRET.sub(r"\1[redacted]", line.rstrip())
+        if lines and line == lines[-1]:
+            continue
+        lines.append(line)
+    return lines
+
+
+def prefilter(lines):
+    """Keep the lines that matter when the input is too long for a small model."""
+    if sum(len(line) + 1 for line in lines) <= MAX_CHARS:
+        return lines
+    head = set(range(min(HEAD_LINES, len(lines))))  # the command that was run
+    keep = set(range(max(0, len(lines) - TAIL_LINES), len(lines)))
+    for i, line in enumerate(lines):
+        if SIGNAL.search(line):
+            keep.update(range(max(0, i - 2), min(len(lines), i + 4)))
+    out, size, last = [(i, lines[i]) for i in head], sum(len(lines[i]) + 1 for i in head), -1
+    for i in sorted(keep - head, reverse=True):  # the end of a log matters most
+        size += len(lines[i]) + 1
+        if size > MAX_CHARS:
+            break
+        out.append((i, lines[i]))
+    result = []
+    for i, line in sorted(out):
+        if last != -1 and i != last + 1:
+            result.append("[...]")
+        result.append(line)
+        last = i
+    return result
+
+
+def ask(model, prompt, text):
+    body = {"model": model, "stream": False, "prompt": f"{prompt}\n\n<input>\n{text}\n</input>"}
+    request = urllib.request.Request(f"{OLLAMA}/api/generate", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            answer = json.loads(response.read())["response"]
+            answer = re.sub(r"^(\w+):[ \t]*\n+(?=\S)(?!\w+:)", r"\1: ", answer, flags=re.M)  # a small model puts the value on the next line
+            lines = [line.rstrip() for line in answer.splitlines() if line.strip()]
+            return "\n".join(line for line in lines if not re.fullmatch(r"[\s•*-]*unknown\.?", line, re.I))  # padding, not content
+    except urllib.error.HTTPError as error:
+        die(f"Ollama refused the request: {error.read().decode()[:200]}")
+    except (urllib.error.URLError, TimeoutError) as error:
+        die(f"Ollama is not answering at {OLLAMA} ({error}). Open the Ollama app and try again.")
+
+
+def no_failure_summary(lines):
+    """A log with no failure words needs no model."""
+    body = [line for line in lines if line.strip()]
+    return f"command: {body[0][:200]}\nresult: {body[-1][:200]}\nstatus: no failure words in the output"
+
+
+def drop_invented_paths(summary, text):
+    """A path the model names must be in the input."""
+    out = []
+    for line in summary.split("\n"):
+        if line.startswith("file:"):
+            kept = []
+            for path, number in re.findall(r"([\w./-]+\.\w+)(:\d+)?", line):
+                found = path + number if path + number in text else path if path in text else None
+                if found and found not in kept:
+                    kept.append(found)
+            line = "file: " + (", ".join(kept) or "unknown")
+        out.append(line)
+    return "\n".join(out)
+
+
+def slug(value):
+    return re.sub(r"[^A-Za-z0-9]+", "-", value).strip("-") or "summary"
+
+
+def write_log_note(args, summary, raw_chars):
+    now = datetime.datetime.now()
+    folder = VAULT / "02-Logs-And-Summaries"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{now:%Y-%m-%d}-{slug(args.project)}-{slug(args.topic)}.md"
+    if path.exists():
+        path = path.with_name(f"{path.stem}-{now:%H%M%S}.md")
+    head = f"---\nproject: {args.project}\ndate: {now:%Y-%m-%d %H:%M}\nkind: {args.kind}\nmodel: {args.model}\nraw_chars: {raw_chars}\n---\n"
+    path.write_text(f"{head}# {args.topic}\n\n{summary}\n")
+    return path
+
+
+def write_state(args, summary):
+    path = VAULT / "01-Active-State" / f"{args.project}.md"
+    if not path.exists():
+        die(f"no state note for {args.project}: {path}")
+    lines = path.read_text().rstrip("\n").split("\n")
+    block = ["## Last summary", f"{datetime.date.today().isoformat()}, {args.model}, not reviewed:", *summary.split("\n")]
+    if "## Last summary" in lines:
+        start = lines.index("## Last summary")
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        lines[start:end] = block + ([""] if end < len(lines) else [])
+    else:
+        lines += ["", *block]
+    path.write_text("\n".join(lines) + "\n")
+    return path
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("-p", "--project", required=True)
+    parser.add_argument("-t", "--topic", default="summary")
+    parser.add_argument("-k", "--kind", choices=sorted(PROMPTS), default="log")
+    parser.add_argument("-f", "--file", help="read this file instead of standard input")
+    parser.add_argument("-m", "--model", default=MODEL)
+    parser.add_argument("--state", action="store_true", help="write to the project's state note instead of a new summary note")
+    parser.add_argument("--dry-run", action="store_true", help="print the summary, write nothing")
+    args = parser.parse_args()
+
+    raw = Path(args.file).read_text(errors="replace") if args.file else sys.stdin.read()
+    if not raw.strip():
+        die("nothing to summarize")
+    lines = clean(raw)
+    text = "\n".join(prefilter(lines))
+    if args.kind == "log" and not any(FAILURE.search(line) for line in lines):
+        summary, args.model = no_failure_summary(lines), "none"
+    else:
+        summary = ask(args.model, PROMPTS[args.kind], text)
+        if not summary:
+            die("the model returned nothing")
+        if args.kind == "log":
+            summary = drop_invented_paths(summary, text)
+    if args.dry_run:
+        where = "not saved (dry run)"
+    else:
+        where = str(write_state(args, summary) if args.state else write_log_note(args, summary, len(raw)))
+    print(summary)
+    print(f"-- {len(raw)} chars in, {len(text)} sent to {args.model}, {len(summary)} out. {where}")
+
+
+if __name__ == "__main__":
+    main()
