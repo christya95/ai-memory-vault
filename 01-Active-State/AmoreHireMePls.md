@@ -23,7 +23,7 @@ Map, commands and rules: the repo's `AGENTS.md`. Taken from the handoff of 2026-
 - `app_6a78e38192928c99` (job `job_d0f65161045baf54`): reached the email code prompt, not sent. The owner records "It was not sent", presses Retry, and pastes the new code. An agent must not retry it or mark it sent.
 
 ## Next
-0. Commit `fc4dd53` on `main` (compressed `AGENTS.md`, handoff pointer, `docs/agent-rules.md`, Cursor rule and ignore files) is local, not pushed.
+0. Commit `fc4dd53` on `main` (compressed `AGENTS.md`, handoff pointer, `docs/agent-rules.md`, Cursor rule and ignore files) is local, not pushed. Uncommitted since: `docs/PROGRESS.md` split (older sections in `docs/PROGRESS-archive.md`), `.cursor/rules/src-conventions.mdc`, shorter `AGENTS.md` and project rule.
 1. The two owner actions above.
 2. A higher score resume rebuild through the tailored resume skill. Size M. Needs the owner's go.
 3. Save the two later places (`location_fallbacks`) on the Profile page or in `profile.toml`, not in code.
