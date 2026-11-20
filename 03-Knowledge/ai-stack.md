@@ -41,5 +41,5 @@ iPhone
 
 Mac
 - Cursor, Settings, Models: enable a fast low-cost model next to the main one.
-- New Cursor chat: ask which rules are loaded. If `token-saver` is missing, paste one line into Cursor Settings, Rules: "At session start read ~/.cursor/rules/token-saver.mdc and follow it."
+- Cursor loads `~/.cursor/rules/token-saver.mdc` in every project (seen loaded 2026-11-20). Still open: trim User Rules, unused plugins and MCP servers in Cursor Settings; they load on every request.
 - No NAS share is mounted on this Mac, so archives are not mirrored there. Mount one and ask again.
