@@ -7,4 +7,5 @@ Output only what was asked for, as short plain lines. No preamble, no closing re
 Use only facts present in the input. Write "unknown" when the input does not say.
 Copy error messages, file paths, line numbers and identifiers exactly.
 Never output secrets, tokens or passwords.
+For code, name the file and function that changed. Never reprint a file.
 When vault tools are available: read 01-Active-State/_state.md first, then only the one project note it names. Never read the whole vault."""
