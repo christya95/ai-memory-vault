@@ -4,7 +4,8 @@ Updated 2026-11-20. No secret is written here or in any config file.
 
 ## Parts
 - Vault: `~/Obsidian/AI-Memory`. Rules: `03-Knowledge/AI-RULES.md`.
-- Location: the vault folder is in iCloud Drive (`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/AI-Memory`); `~/Obsidian/AI-Memory` is a link to it. The iPhone gets it through iCloud.
+- Location: the vault folder is in iCloud Drive (`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/AI-Memory`); `~/Obsidian/AI-Memory` is a link to it. The iPhone gets it through iCloud. The folder is set to Keep Downloaded (2026-11-20; check: `fileproviderctl evaluate <folder> | grep isKeepDownloaded`).
+- Windows uses a Git clone outside iCloud Drive, never the iCloud copy: that copy's `.git` is a pointer to a Mac-only path.
 - Backup and Windows: private Git repository `christya95/ai-memory-vault`. `_tools/vault-sync` runs every 5 minutes on the Mac (launchd `md.obsidian.ai-memory-sync`, log `~/.local/state/ai-memory/sync.log`) and refreshes `~/.cursor/rules/token-saver.mdc`. Git ignores `.obsidian/`. Same line changed on two devices: the syncing device wins, the other version stays in Git history.
 - The launchd job runs `~/Applications/AI Memory Sync.app`, a wrapper around `vault-sync`. macOS refuses a bare `/bin/bash` background job access to iCloud Drive ("Operation not permitted"); the app has its own permission. Rebuilding the app can make macOS ask again.
 - Kept off iCloud, in `~/.local/share/ai-memory/`: the Git object store (`vault.git`; iCloud corrupts a `.git` folder) and the REST plugin folder with its key. The vault holds a `.git` pointer file and a link for each.
@@ -29,7 +30,7 @@ Updated 2026-11-20. No secret is written here or in any config file.
 ## Left to do by hand
 ChatGPT
 - Paste the two blocks from `chatgpt-custom-instructions.md`.
-- `vault-bridge start`, then add the server as in `chatgpt-mcp-setup.md` and run its three checks.
+- `vault-bridge start` (started 2026-11-20 18:10; the address changes at every start, and the tunnel ends when the Mac restarts), then add the server as in `chatgpt-mcp-setup.md` and run its three checks. Copy the full address without showing it: `printf '%s/%s/mcp' "$(cat ~/.local/state/ai-memory/tunnel-url)" "$(op read op://AI-Stack/Obsidian-MCP-Tunnel/token)" | pbcopy`.
 
 Windows PC
 - Copy `windows-bootstrap.ps1` to the PC (it is in the GitHub repository) and run it. Sign in to GitHub, 1Password and Tailscale when it asks.
@@ -40,6 +41,5 @@ iPhone
 
 Mac
 - Cursor, Settings, Models: enable a fast low-cost model next to the main one.
-- Finder: right-click the `AI-Memory` folder in iCloud Drive, Obsidian, and choose Keep Downloaded, so iCloud never removes the local copy of the scripts.
 - New Cursor chat: ask which rules are loaded. If `token-saver` is missing, paste one line into Cursor Settings, Rules: "At session start read ~/.cursor/rules/token-saver.mdc and follow it."
 - No NAS share is mounted on this Mac, so archives are not mirrored there. Mount one and ask again.

@@ -11,6 +11,8 @@ export PATH="/opt/homebrew/bin:$PATH"
 mkdir -p "$STATE"
 
 alive() { [ -f "$STATE/$1.pid" ] && kill -0 "$(cat "$STATE/$1.pid")" 2>/dev/null; }
+# Own session, so the process outlives the shell or agent that started it. The pid stays the same.
+detach() { exec perl -MPOSIX -e 'setsid(); exec @ARGV or exit 127' "$@"; }
 
 stop() {
   for name in tunnel bridge; do
@@ -18,6 +20,7 @@ stop() {
     rm -f "$STATE/$name.pid"
   done
   lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null  # the server itself, two processes below the launcher
+  pkill -f "cloudflared tunnel --no-autoupdate --url http://127.0.0.1:$PORT" 2>/dev/null  # a tunnel whose pid file was lost
   rm -f "$STATE/tunnel-url"
   echo "stopped"
 }
@@ -31,12 +34,12 @@ url() {
 start() {
   alive bridge && alive tunnel && { url; return; }
   stop >/dev/null
-  VAULT_BRIDGE_TOKEN="$TOKEN_REF" VAULT_BRIDGE_PORT="$PORT" nohup op run --no-masking -- \
+  VAULT_BRIDGE_TOKEN="$TOKEN_REF" VAULT_BRIDGE_PORT="$PORT" detach op run --no-masking -- \
     uv run --quiet --no-project --with "mcp==2.3.0" python "$VAULT/_tools/vault-mcp-bridge.py" >"$STATE/bridge.log" 2>&1 &
   echo $! >"$STATE/bridge.pid"
   for _ in $(seq 1 40); do curl -s -o /dev/null -m 1 "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
   alive bridge || { echo "the bridge did not start: $(tail -n 3 "$STATE/bridge.log")"; return 1; }
-  nohup cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" >"$STATE/tunnel.log" 2>&1 &
+  detach cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" >"$STATE/tunnel.log" 2>&1 &
   echo $! >"$STATE/tunnel.pid"
   for _ in $(seq 1 60); do
     found="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$STATE/tunnel.log" | head -n 1)"
