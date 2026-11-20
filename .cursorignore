@@ -1,4 +1,5 @@
-# Obsidian's own settings. The Local REST API plugin keeps its key here.
 .obsidian/
 .trash/
 .DS_Store
+*-backup.md
+02-Logs-And-Summaries/

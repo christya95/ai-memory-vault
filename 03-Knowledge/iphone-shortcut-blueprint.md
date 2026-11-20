@@ -39,5 +39,5 @@ Only if the vault is on the phone (below). After step 8:
 - "Could not connect": Tailscale is off on the phone, or the Mac is asleep.
 - Empty result: the page has no Reader view. Select the text on the page and share that instead.
 
-## Vault on the iPhone (optional, not set up)
-The vault syncs through a private Git repository (`christya95/ai-memory-vault`); the Mac and the Windows PC sync by themselves. On the iPhone, Git needs an app: Working Copy (clone the repo, link the folder as an Obsidian vault, sync by hand or by automation), or the Obsidian Git community plugin with a GitHub token limited to that one repository, saved in 1Password. Neither was tested. For ChatGPT on the phone you do not need the vault there: paste `00-Index/_cross-device-handoff.md`, or use the AI Memory tool if the app offers it.
+## Vault on the iPhone (not yet opened there)
+The vault folder is in iCloud Drive under Obsidian. Install Obsidian on the iPhone with the same Apple account, and pick `AI-Memory` from the vault list; no Git app is needed. The Local REST API plugin is desktop only and its folder is not in iCloud, so the phone shows it as missing; leave it. Two devices editing one note at once produce a second copy with a number in its name; keep one.

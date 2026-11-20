@@ -4,7 +4,9 @@ Updated 2026-11-20. No secret is written here or in any config file.
 
 ## Parts
 - Vault: `~/Obsidian/AI-Memory`. Rules: `03-Knowledge/AI-RULES.md`.
-- Sync: private Git repository `christya95/ai-memory-vault`. `_tools/vault-sync` runs every 5 minutes on the Mac (launchd `md.obsidian.ai-memory-sync`, log `~/.local/state/ai-memory/sync.log`). Not synced: `.obsidian/workspace*.json`, `.obsidian/plugins/`, `.obsidian/community-plugins.json`. Same line changed on two devices: the syncing device wins, the other version stays in Git history.
+- Location: the vault folder is in iCloud Drive (`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/AI-Memory`); `~/Obsidian/AI-Memory` is a link to it. The iPhone gets it through iCloud.
+- Backup and Windows: private Git repository `christya95/ai-memory-vault`. `_tools/vault-sync` runs every 5 minutes on the Mac (launchd `md.obsidian.ai-memory-sync`, log `~/.local/state/ai-memory/sync.log`) and refreshes `~/.cursor/rules/token-saver.mdc`. Git ignores `.obsidian/`. Same line changed on two devices: the syncing device wins, the other version stays in Git history.
+- Kept off iCloud, in `~/.local/share/ai-memory/`: the Git object store (`vault.git`; iCloud corrupts a `.git` folder) and the REST plugin folder with its key. The vault holds a `.git` pointer file and a link for each.
 - Ollama on the Mac (Ollama app): listens on all interfaces, port 11434, so it answers on the tailnet and also on the local network, with no password. Models: `token-saver` (3B, summaries), `gpt-oss:20b` (tools), `qwen3.8:27b`, `gemma4:26b`, `gemma4:e4b`.
 - `summarize-to-obsidian`: compresses a log, diff or note with `token-saver` and saves it here. `OLLAMA_URL` picks the endpoint.
 - Local REST API plugin 5.5.2 (Mac only): `https://127.0.0.1:27124`. MCP server `mcp-obsidian==0.2.3` on top of it, for Cursor and Continue.

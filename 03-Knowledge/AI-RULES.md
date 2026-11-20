@@ -15,6 +15,7 @@ Vault: `~/Obsidian/AI-Memory`. One copy of the rules: `~/.cursor/rules/token-sav
 - Targeted reads only: `git diff`, a function name, or an exact line range. Not a whole file when a range will do.
 - Never list a whole directory tree, read a whole log, or re-read old chats to rebuild context.
 - Never read `node_modules`, `.git`, lockfiles, build output, caches, binaries.
+- Never read `*-backup.md` or anything in `02-Logs-And-Summaries/` of the vault unless the user names that file. They are archives.
 
 ## Logs
 - Filter first: `tail -n 30`, or the lines matching `error`.
