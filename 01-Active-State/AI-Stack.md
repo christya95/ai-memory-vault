@@ -8,7 +8,7 @@ updated: 2026-11-20
 Map: `AGENTS.md`. Configuration and device setup: `03-Knowledge/ai-stack.md`.
 
 ## Now
-- README is in the vault repo. The setup guide, with the token-saver prompts and the NAS-only prompt, is in Notion under Home / Work / Tech Setup / AI Memory setup.
+- `README.md` in this repo is the clone-facing setup: prompts, device sharing, and the optional NAS prompt. Notion has the same guide under Home / Work / Tech Setup / AI Memory setup.
 - Restarted the Mac vault bridge and cloudflared tunnel on 2026-11-20; both reported running.
 - Remote MCP read matched the local state note. Recreated and installed ChatGPT's `AI Memory` connection with the new address; a fresh ChatGPT chat successfully read `_state.md` and reported its then-active project, AmoreHireMePls.
 - The previous plugin was renamed `AI Memory (previous connection)` and uninstalled. Its app definition remains; nothing was permanently deleted.
