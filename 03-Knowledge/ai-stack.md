@@ -2,6 +2,12 @@
 
 Updated 2026-11-20. No secret is written here or in any config file.
 
+## Now
+- ChatGPT web Custom Instructions saved and reopened to verify both blocks (2026-11-20).
+- AI Memory custom MCP plugin installed; read check matched the index, write check verified on disk, test line removed.
+- Vault bridge running; full server address entered privately and cleared from the clipboard.
+- iPhone ChatGPT: AI Memory appears and reads successfully (owner confirmed 2026-11-20). All three checks passed.
+
 ## Parts
 - Vault: `~/Obsidian/AI-Memory`. Rules: `03-Knowledge/AI-RULES.md`.
 - Location: the vault folder is in iCloud Drive (`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/AI-Memory`); `~/Obsidian/AI-Memory` is a link to it. The iPhone gets it through iCloud. The folder is set to Keep Downloaded (2026-11-20; check: `fileproviderctl evaluate <folder> | grep isKeepDownloaded`).
@@ -27,10 +33,9 @@ Updated 2026-11-20. No secret is written here or in any config file.
 - Windows PC: `windows-bootstrap.ps1`. Not yet run.
 - iPhone: `iphone-shortcut-blueprint.md`. Not yet built.
 
-## Left to do by hand
+## Next
 ChatGPT
-- Paste the two blocks from `chatgpt-custom-instructions.md`.
-- `vault-bridge start` (started 2026-11-20 18:10; the address changes at every start, and the tunnel ends when the Mac restarts), then add the server as in `chatgpt-mcp-setup.md` and run its three checks. Copy the full address without showing it: `printf '%s/%s/mcp' "$(cat ~/.local/state/ai-memory/tunnel-url)" "$(op read op://AI-Stack/Obsidian-MCP-Tunnel/token)" | pbcopy`.
+- After a bridge restart, update the server URL using `chatgpt-mcp-setup.md`; the address is temporary. Never save the full address in a note.
 
 Windows PC
 - Copy `windows-bootstrap.ps1` to the PC (it is in the GitHub repository) and run it. Sign in to GitHub, 1Password and Tailscale when it asks.
