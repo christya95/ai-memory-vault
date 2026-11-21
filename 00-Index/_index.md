@@ -14,7 +14,7 @@ Read one line, open one note.
 - `_tools/`: scripts (`summarize-to-obsidian`, `vault-sync`, `vault-bridge`).
 
 ## Knowledge
-- `README.md` at the vault root: setup, the token-saver prompts, device sharing, and the optional NAS prompt.
+- `README.md` at the vault root: a guide for other people. Setup, both prompts, device sharing, and the optional NAS prompt.
 - `AI-RULES.md`: the rules every tool follows.
 - `ai-stack.md`: how the tools are connected, and what is left to do by hand.
 - `AGENTS-template.md`: repo map template for project roots.

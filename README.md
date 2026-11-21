@@ -1,140 +1,139 @@
-# AI Memory
+# 🧠 AI Memory
 
-Private vault for token-efficient AI work. Clone this repo, paste the prompt below into a new agent chat, and the same short notes work on a Mac, a Windows PC, and an iPhone.
+Give your AI a notebook, not your entire chat history.
 
-GitHub: [christya95/ai-memory-vault](https://github.com/christya95/ai-memory-vault). A copy of this guide is also in Notion under Home / Work / Tech Setup / AI Memory setup. This file is the one a clone needs.
+This is a small Obsidian vault. Each project keeps one short note about where things stand. The next chat reads that note and gets on with the work. You spend fewer tokens, and you can pick the chat up on another device.
 
-Secrets stay in 1Password, tag `AI-Stack`, referenced as `op://`. Do not commit API keys, the ChatGPT bridge address, or the Obsidian REST key. The full bridge address is a password.
+You do not need the same computer, the same apps, or the same accounts as anyone else. Use what you already have. Tell the agent to skip anything you do not want installed.
 
-## What you get
+## 🌱 What you need
 
-- `00-Index/` map, and `_cross-device-handoff.md` for starting a chat on another device
-- `01-Active-State/` current state. `_state.md` names the active project
-- `02-Logs-And-Summaries/` compressed logs, never raw logs
-- `03-Knowledge/` rules and per-device steps
-- `_tools/` sync, the local summarizer, and the ChatGPT bridge
-- `AGENTS.md` map for an agent opening this vault
+| You need | Why |
+| --- | --- |
+| [Obsidian](https://obsidian.md) | The notebook. It is free for local vaults. |
+| One coding agent | Cursor, or another agent that can read a folder. |
+| A way to sync a folder | Git, iCloud, Obsidian Sync, or a shared drive. Pick one. |
 
-## Setup
+Nice to have, not required:
 
-1. Install Obsidian, 1Password, the 1Password CLI, Ollama, and `uv`.
-2. Put the vault at `~/Obsidian/AI-Memory` with the folders above.
-3. Turn on the Obsidian Local REST API plugin. Save its key in 1Password and point Cursor at it with `op://`.
-4. Paste the token-saver prompt below into a new agent chat.
-5. Paste the model-tier prompt after the vault exists.
-6. Paste the ChatGPT blocks from `03-Knowledge/chatgpt-custom-instructions.md`, then connect the web app using `03-Knowledge/chatgpt-mcp-setup.md`.
-7. Share the vault across devices using the section below.
-8. Use the NAS prompt only when a share is already mounted.
+- 🤖 A local model such as [Ollama](https://ollama.com), for summaries that cost nothing
+- 🔐 A password manager, so keys never land in the repo
+- 💬 ChatGPT, if you want the same notes in a browser chat
+- 🗄️ A NAS, only if you already have one and want old logs parked there
 
-## Prompt: token saver
+## 🗂️ The notebook
 
-Paste this into a new agent chat. Use your own email in the account step.
+Create a folder named `AI-Memory` and put these inside it:
+
+| Folder | What goes here |
+| --- | --- |
+| `00-Index/` | A map of your projects, plus one handoff note for another device |
+| `01-Active-State/` | One short "where I am" note per project |
+| `02-Logs-And-Summaries/` | Short error summaries. Never a raw log. |
+| `03-Knowledge/` | Facts you want to reuse |
+| `_tools/` | Small scripts, if you add any |
+
+Start of a chat: open `01-Active-State/_state.md`, then only the one project note it names.
+
+End of a chat: update that note. A later chat should not need this one.
+
+## 🚀 Set it up
+
+1. Install Obsidian and create the vault folder above.
+2. Open a new agent chat in that folder.
+3. Paste **Prompt 1**. Tell the agent your operating system and which apps you already use.
+4. When the vault exists, paste **Prompt 2** if you want cheap or local models for the easy jobs.
+5. Sync the folder with whatever you chose in the table above.
+6. The NAS prompt is last, and only if a share is already mounted.
+
+Say no if the agent wants to install something you did not ask for.
+
+## ✨ Prompt 1 · build the notebook
 
 ```
 # Goal
-Set up a local, token-efficient AI memory and knowledge workflow on macOS centered around Obsidian, connected to Cursor, Ollama, and ChatGPT, with credentials managed via 1Password.
+Set up a local, token-efficient AI memory in Obsidian. Connect it to the AI tools I already use. Adapt every step to my operating system. Do not install a program I did not agree to. If I do not have a tool you mention, skip it and tell me what I miss.
 
 # Core Constraints (Maximum Token Efficiency)
 1. **Zero Full-Tree or Full-Log Reads:** Never dump full directory trees, raw build logs, or entire files into context. Always filter logs (e.g., `tail -n 30` or `grep -i error`), inspect targeted line ranges, and rely on indexed summaries.
 2. **Stateless Session Handoffs:** Do not rely on long chat histories. Store active project state, architecture decisions, and current tasks inside concise Markdown notes in Obsidian (`_state.md` and `_index.md`). Read only the relevant note at the start of a session and update it before ending.
-3. **Aggressive Context Pruning:** Ignore `node_modules`, `.git`, `.DS_Store`, lockfiles, build artifacts, and binary files. Add `.cursorignore` rules immediately.
+3. **Aggressive Context Pruning:** Ignore `node_modules`, `.git`, `.DS_Store`, lockfiles, build artifacts, and binary files. Add ignore rules for the agent immediately.
 4. **Concise Outputs:** Keep all terminal outputs, agent responses, and generated vault notes brief, structured, and free of conversational filler.
 
-# Tasks to Execute (macOS)
+# Tasks
 
-## 1. Install & Audit Dependencies via Homebrew
-- Check if Homebrew (`brew`) is installed; install missing tools via Brew:
-  - `brew install --cask obsidian`
-  - `brew install --cask 1password 1password-cli`
-  - `brew install ollama uv node`
-- Ensure Ollama is running as a background service (`brew services start ollama`).
+## 1. Vault
+- Create a vault folder I can open in Obsidian. A good default is `~/Obsidian/AI-Memory`. Use another path if I ask.
+- Create:
+  - `00-Index/` with `_index.md` (a map of projects) and `_cross-device-handoff.md` (one note to start a chat on another device)
+  - `01-Active-State/` with `_state.md` (names the active project) and one short note per project
+  - `02-Logs-And-Summaries/` for compressed error summaries, never raw logs
+  - `03-Knowledge/` for reusable notes
+- Add agent ignore rules for dependencies, git internals, lockfiles, build output, and binaries.
 
-## 2. Obsidian Vault & UI Setup
-- Initialize a local Obsidian vault at `~/Obsidian/AI-Memory` and launch the Obsidian desktop UI (`open -a Obsidian`).
-- Create a lean, token-saving folder structure:
-  - `00-Index/` (master `_index.md` map of projects and notes)
-  - `01-Active-State/` (compact current context per project so prior turns don't need to be re-read)
-  - `02-Logs-And-Summaries/` (compressed error summaries, never raw logs)
-  - `03-Knowledge/` (reusable patterns, snippets, and references)
-- Configure the **Obsidian Local REST API** plugin (and `uvx mcp-obsidian` or `obsidian-mcp-tools`) so all AI tools can read/write targeted notes by path or search query without scanning the whole vault.
+## 2. Connect the tools I already have
+- If I use Cursor, add a rule that reads `01-Active-State/` first, updates the state note at the end, never reads a full directory tree, and filters terminal output.
+- If I use a local model, point summaries at it so cloud chats are not spent compressing logs.
+- If I use ChatGPT, write custom instructions I can paste, matching these rules. If a remote connection needs a token, put the token in my password manager and never in a committed file. The full address of a tunnel is a password. Do not write it in the vault.
+- If I use a password manager with a CLI, reference secrets from there. Never hardcode API keys or tokens in `.env`, shell config, or JSON that will be committed.
 
-## 3. Connect Cursor, Ollama, and ChatGPT
-- **Cursor:**
-  - Configure `~/.cursor/mcp.json` (and project `.cursor/mcp.json`) to connect Cursor to the Obsidian MCP server using `op run` so API tokens are never stored in plaintext.
-  - Create `.cursorrules` (or `.cursor/rules/token-saver.mdc`) enforcing: read `01-Active-State/` first, update state files on completion, never read full directory trees, and filter terminal outputs.
-- **Ollama:**
-  - Pull a fast, capable local model (e.g., `ollama pull qwen2.5-coder:7b` or `llama3.2`) and build a custom `Modelfile` (`ollama create token-saver -f Modelfile`) with a system prompt enforcing concise, low-token outputs and Obsidian state lookups.
-  - Wire Ollama to the same Obsidian MCP server via a lightweight local bridge/UI (such as Open WebUI or Continue in VS Code/Cursor).
-- **ChatGPT:**
-  - Expose the Obsidian MCP server securely via an authenticated tunnel (e.g., `cloudflared` or `ngrok` via Brew) or configure Open WebUI with an OpenAI API key so ChatGPT can query and update the same vault notes.
-  - Output the exact Custom Instructions / System Prompt for me to paste into ChatGPT so it follows identical token-saving rules.
-
-## 4. Account Setup & 1Password Integration
-- Verify `op signin` works with the 1Password desktop app integration enabled (`Settings > Developer > Integrate with 1Password CLI`).
-- Guide me through creating any required accounts (such as an Obsidian account at `https://obsidian.md` if needed, or generating API keys) using your own email, pausing only when manual email verification/CAPTCHA is required.
-- **Security Rule:** Never hardcode API keys, MCP tokens, or passwords in `.env`, `.zshrc`, or `.json` config files. Save all generated API keys, Obsidian Local REST API tokens, and login credentials into 1Password via `op item create` (tagged `AI-Stack`), and reference them via `op://` URIs.
-
-# Execution Order
-1. Audit macOS environment (`brew`, `obsidian`, `ollama`, `cursor`, `op`, `uv`, `node`).
-2. Create `~/Obsidian/AI-Memory`, `.cursorignore`, and `.cursorrules` first so all remaining steps run under strict token-saving rules.
-3. Configure the Obsidian Local REST API + MCP server and store its token in 1Password.
-4. Wire up Cursor, Ollama, and ChatGPT one by one and verify read/write access to `01-Active-State/_state.md`.
+## 3. Check
+- Read and update `01-Active-State/_state.md` once.
+- Tell me, in a few lines, what you set up and what you skipped.
 ```
 
-## Prompt: model tiers
+## 💸 Prompt 2 · spend the expensive model rarely
 
-Paste this after the vault exists. Summaries and notes then use the local model.
+Paste this after Prompt 1. Skip it if you only use one model and you are happy with that.
 
 ```
-# Follow-Up Task: Add Tiered Model Routing (Cost Optimization)
-Update the setup we just configured so simple tasks automatically use free local Ollama models or low-cost cloud models, reserving expensive frontier models strictly for complex planning and debugging.
+# Follow-Up: route cheap work to a cheap model
+Update the setup so simple tasks use a free local model or a low-cost cloud model. Save the expensive model for hard problems. Skip any model I do not have.
 
-## 1. Define 3 Routing Tiers
-- **Tier 1 (Free / Local via Ollama):** Summarizing terminal logs, updating Obsidian `_state.md` and `_index.md` notes, formatting, docstrings, simple regex/scripts, and boilerplate edits.
-- **Tier 2 (Fast / Low-Cost Cloud):** Routine multi-file code edits, unit tests, and standard feature implementation (e.g., GPT-4o-mini / Claude Haiku / Cursor Small).
-- **Tier 3 (Frontier / Heavy Reasoning):** System architecture, complex debugging, tricky backend/MongoDB queries, and multi-file refactoring (use only when Tier 1 & 2 cannot solve it).
+## Tiers
+- **Tier 1, free and local:** log summaries, state notes, formatting, docstrings, simple edits.
+- **Tier 2, fast and low-cost:** routine multi-file edits, tests, and ordinary features.
+- **Tier 3, the strong model:** architecture, a hard bug, or a risky change. Use it when the cheaper ones fail.
 
-## 2. Apply Routing Rules Across Tools
-- **Cursor:**
-  - Add a routing section to `.cursorrules` / `.cursor/rules/token-saver.mdc` instructing me/the agent when to switch models, and configure Cursor's model list so fast/cheap models are enabled alongside your primary Composer model.
-  - Offload all Obsidian note summarization and log compression to the local Ollama `token-saver` model via a local script or MCP tool rather than burning Cursor/ChatGPT premium tokens.
-- **Ollama:**
-  - Pull a lightweight fast model for Tier 1 background tasks (e.g., `ollama pull qwen2.5-coder:3b` or `llama3.2:3b`) in addition to your 7B+ coding model.
-  - Set up a lightweight local CLI/MCP helper script (`summarize-to-obsidian`) that pipes raw logs or diffs through local Ollama (`http://localhost:11434`) before writing compact summaries into `02-Logs-And-Summaries/` or `01-Active-State/`.
-- **ChatGPT:**
-  - Update the ChatGPT Custom Instructions to keep responses ultra-concise and remind me to use a mini/fast model for routine lookups and vault notes, switching to heavy reasoning models only for architectural decisions.
+## Apply it
+- In the agent rules, say which tier a task is, in one line, when it matters.
+- If a local model is available, send log and note summaries to it and write the short result into `02-Logs-And-Summaries/` or `01-Active-State/`.
+- In ChatGPT custom instructions, ask for a short answer, and remind me to use a fast model for lookups and notes.
 
-## 3. Verify
-- Test piping a sample noisy log through the local Ollama `summarize-to-obsidian` helper so zero cloud tokens are spent summarizing logs.
+## Check
+- Run one noisy sample through the local summarizer, if I have one, and show me the short note it wrote.
 ```
 
-## Share across devices
+## 📱 More than one device
 
-One vault, three copies. Do not open the iCloud copy on Windows: its `.git` file points at a Mac-only path.
+Keep one vault and let your sync carry it.
 
-- Mac: keep the vault in iCloud Drive and link it from `~/Obsidian/AI-Memory`. Pin the folder so files stay downloaded. `_tools/vault-sync` runs every 5 minutes, copies `03-Knowledge/AI-RULES.md` to `~/.cursor/rules/token-saver.mdc`, commits, and pushes. The Mac job is `~/Applications/AI Memory Sync.app`, because a bare shell cannot read iCloud. Cursor on the Mac also uses a local hook in `~/.cursor/hooks/`. That hook stays on the Mac and is not in this repo.
-- Windows: clone this repo to `~/Obsidian/AI-Memory` outside iCloud, then run `03-Knowledge/windows-bootstrap.ps1`. Sign in to GitHub, 1Password, and Tailscale when it asks. The script copies the rules file into Cursor.
-- iPhone: install Obsidian and open the `AI-Memory` vault from iCloud. Build the Shortcut in `03-Knowledge/iphone-shortcut-blueprint.md`. Its first run checks that Ollama answers from another device. If the ChatGPT app has no AI Memory plugin, paste `00-Index/_cross-device-handoff.md` into the chat.
-- Another chat on any device: read `01-Active-State/_state.md`, then only the project note it names. When the tool is missing, paste `00-Index/_cross-device-handoff.md`.
+- 💻 **Each computer.** Clone or copy this folder. Open it in Obsidian. The agent reads `_state.md` and then one project note.
+- 📱 **A phone.** Open the same vault in Obsidian. If the chat app cannot see the vault, paste `_cross-device-handoff.md` into the chat.
+- 📝 **A new chat anywhere.** Read the state note. When the tool is missing, paste the handoff note. Do not paste the old chat.
 
-The same line edited on two devices: the device that syncs wins. The other version stays in Git history.
+Two devices editing the same line: keep the edit you just made, and leave the other one in git history if you use git.
 
-## Optional: NAS
+Write the handoff in a few lines: active project, what is true, what is next. No secrets.
 
-Use this only when a share is already mounted. Do not create or mount one from this prompt.
+## 🗄️ Optional · you already have a NAS
+
+Skip this if you do not have a NAS, or if nothing is mounted. This prompt does not create a share.
 
 ```
 # Only if a NAS share is already mounted
 Do not mount a new share. Do not change other services on the NAS.
 
-1. Check /Volumes and any existing SSH, SMB, or Tailscale mount on this Mac.
-2. If an archive share is mounted, mirror `02-Logs-And-Summaries/` and any `*-backup.md` files from `~/Obsidian/AI-Memory` onto that share.
-3. Save the share path in 1Password, tag `AI-Stack`. Do not write credentials into a note. A path with no secret may be recorded in `03-Knowledge/ai-stack.md`.
+1. Look for a share that is already mounted on this computer.
+2. If you find one I use for archives, copy `02-Logs-And-Summaries/` and any `*-backup.md` files from the AI-Memory vault onto that share.
+3. Keep passwords out of the vault. A path with no secret may be written in `03-Knowledge/`.
 4. If nothing is mounted, stop and say so.
 ```
 
-## Left on each machine
+## 🔒 Keep this out of the repo
 
-- Mac Cursor hook files stay in `~/.cursor/hooks/` and are not part of this clone.
-- `.obsidian/` is gitignored.
-- The Git object store and the REST plugin key live in `~/.local/share/ai-memory/`, not in iCloud.
+- Passwords, API keys, and tunnel addresses
+- Raw logs and old backup notes you do not want an agent to reread
+- Your editor's local hook files, if you add any. Those belong on that computer.
+
+A good state note fits on one screen. If it starts looking like a diary, cut it back. ✂️
