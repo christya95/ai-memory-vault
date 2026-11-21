@@ -5,7 +5,7 @@ Updated 2026-11-20. No secret is written here or in any config file.
 ## Now
 - ChatGPT web Custom Instructions saved and reopened to verify both blocks (2026-11-20).
 - AI Memory custom MCP plugin installed; read check matched the index, write check verified on disk, test line removed.
-- Vault bridge running; full server address entered privately and cleared from the clipboard.
+- Mac restart planned. The current vault bridge will stop; ChatGPT instructions and the vault persist. Full server address was cleared from the clipboard.
 - iPhone ChatGPT: AI Memory appears and reads successfully (owner confirmed 2026-11-20). All three checks passed.
 
 ## Parts
@@ -35,7 +35,7 @@ Updated 2026-11-20. No secret is written here or in any config file.
 
 ## Next
 ChatGPT
-- After a bridge restart, update the server URL using `chatgpt-mcp-setup.md`; the address is temporary. Never save the full address in a note.
+- After the Mac restarts, ask "Reconnect AI Memory": start the bridge, approve 1Password locally, copy the full address privately, recreate the AI Memory connection with the new URL, and verify a read. Current ChatGPT settings have no URL-edit control. Never save the full address in a note.
 
 Windows PC
 - Copy `windows-bootstrap.ps1` to the PC (it is in the GitHub repository) and run it. Sign in to GitHub, 1Password and Tailscale when it asks.
